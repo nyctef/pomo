@@ -1,7 +1,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
-use std::fmt::Alignment::Center;
-
 use eframe::egui;
 use egui::{CentralPanel, Context, FontId, RichText, Style, ViewportBuilder};
 
@@ -51,14 +49,12 @@ impl Default for MyApp {
 impl eframe::App for MyApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ui, |ui| {
-            ui.horizontal_centered(|ui| {
-                ui.vertical_centered_justified(|ui| {
-                    ui.label(
-                        RichText::new(format!("{}", self.time))
-                            .font(FontId::proportional(150.0))
-                            .strong(),
-                    );
-                });
+            ui.centered_and_justified(|ui| {
+                ui.label(
+                    RichText::new(format!("{}", self.time))
+                        .font(FontId::proportional(150.0))
+                        .strong(),
+                );
             });
         });
     }
