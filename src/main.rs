@@ -103,10 +103,21 @@ impl<'m> MyApp<'m> {
             });
         }
     }
+
+    fn update(&mut self) {
+        if let AppState::Counting(countdown) = self.state {
+            let seconds = Self::seconds_remaining(countdown);
+            if seconds == 0 {
+                self.play_alarm();
+            }
+        }
+    }
 }
 
 impl<'m> eframe::App for MyApp<'m> {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        self.update();
+
         let frame = Frame::default().fill(get_bg_color(&self.state));
         CentralPanel::default().frame(frame).show(ui, |ui| {
             if ui.is_pointer_over_egui() {
@@ -116,15 +127,18 @@ impl<'m> eframe::App for MyApp<'m> {
                     show_countdown(self, countdown, ui);
                 }
 
+                if let AppState::Paused(pause) = self.state {
+                    show_pause(self, pause, ui);
+                }
+
                 if let AppState::Completed = self.state {
-                    ui.label(
-                        RichText::new("✅")
-                            .font(FontId::proportional(150.0))
-                            .strong(),
-                    );
+                    show_completed(self, ui);
                 }
             }
         });
+
+        // egui won't automatically redraw unless there's some kind of event
+        ui.ctx().request_repaint_after(Duration::from_secs(1));
     }
 }
 
@@ -159,11 +173,18 @@ fn show_controls<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) -> () {
     });
 }
 
+fn show_pause<'m>(app: &mut MyApp<'m>, pause: Pause, ui: &mut egui::Ui) -> () {
+    ui.centered_and_justified(|ui| {
+        ui.label(
+            RichText::new(format!("{}", pause.remaining_s))
+                .font(FontId::proportional(150.0))
+                .strong(),
+        );
+    });
+}
+
 fn show_countdown<'m>(app: &mut MyApp<'m>, countdown: Countdown, ui: &mut egui::Ui) -> () {
     let seconds = MyApp::seconds_remaining(countdown);
-    if seconds == 0 {
-        app.play_alarm();
-    }
     ui.centered_and_justified(|ui| {
         ui.label(
             RichText::new(format!("{}", seconds))
@@ -171,7 +192,14 @@ fn show_countdown<'m>(app: &mut MyApp<'m>, countdown: Countdown, ui: &mut egui::
                 .strong(),
         );
     });
+}
 
-    // egui won't automatically redraw unless there's some kind of event
-    ui.ctx().request_repaint_after(Duration::from_secs(1));
+fn show_completed<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) -> () {
+    ui.centered_and_justified(|ui| {
+        ui.label(
+            RichText::new("✅")
+                .font(FontId::proportional(150.0))
+                .strong(),
+        );
+    });
 }
