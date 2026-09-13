@@ -2,7 +2,8 @@
 
 use eframe::egui;
 use egui::{CentralPanel, Context, FontId, RichText, Style, ViewportBuilder};
-use rodio::Decoder;
+use rodio::mixer::Mixer;
+use rodio::{Decoder, Player};
 use std::fs::File;
 use std::thread;
 use std::time::{Duration, SystemTime};
@@ -17,9 +18,6 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     let ctx = Context::default();
-
-    let bg_ctx = ctx.clone();
-    thread::spawn(|| bg_timer(bg_ctx));
 
     let red = egui::Color32::from_rgb(175, 73, 73);
 
@@ -39,39 +37,55 @@ fn main() -> eframe::Result {
     // Note that the playback stops when the handle is dropped.//!
     let sink = rodio::DeviceSinkBuilder::open_default_sink().expect("open default audio stream");
     // Load a sound from a file, using a path relative to Cargo.toml
-    let file = File::open("audio/alarm.wav").unwrap();
-    // Decode that sound file into a source
-    let _player = rodio::play(&sink.mixer(), file).unwrap();
+    let alarm_wav = File::open("audio/alarm.wav").unwrap();
 
     eframe::run_native_ext(
         "My egui App",
         options,
         Some(ctx),
-        Box::new(|_cc| Ok(Box::<MyApp>::default())),
+        Box::new(|_cc| Ok(Box::<MyApp>::new(MyApp::new(sink.mixer(), alarm_wav, 3)))),
     )
 }
 
-struct MyApp {
+struct MyApp<'m> {
     time: SystemTime,
+    mixer: &'m Mixer,
+    alarm_wav: File,
+    player: Player,
 }
 
-impl Default for MyApp {
-    fn default() -> Self {
+impl<'m> MyApp<'m> {
+    fn new(mixer: &'m Mixer, alarm_wav: File, ahead: u64) -> Self {
         let now = std::time::SystemTime::now();
-        let in_42_seconds = now + Duration::from_secs(42);
+        let in_42_seconds = now + Duration::from_secs(ahead);
+        let player = Player::connect_new(mixer);
+        let decoded = Decoder::new(alarm_wav.try_clone().unwrap()).unwrap();
+        player.append(decoded);
+        player.pause();
         Self {
             time: in_42_seconds,
+            mixer,
+            alarm_wav,
+            player,
         }
     }
 }
 
-impl eframe::App for MyApp {
+impl<'m> eframe::App for MyApp<'m> {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         let seconds = self
             .time
             .duration_since(SystemTime::now())
             .unwrap_or(Duration::from_secs(0))
             .as_secs();
+
+        if seconds == 0 {
+            print!("playing");
+            // Play the alarm sound again when the timer reaches zero
+            self.player.play();
+            return;
+        }
+
         CentralPanel::default().show(ui, |ui| {
             ui.centered_and_justified(|ui| {
                 ui.label(
@@ -81,15 +95,8 @@ impl eframe::App for MyApp {
                 );
             });
         });
-    }
-}
 
-/// by default egui will only update when there's a incoming ui event like a mouse hover.
-/// so we force it to update at least once a second
-fn bg_timer(ctx: Context) {
-    let one_second = Duration::from_secs(1);
-    loop {
-        thread::sleep(one_second);
-        ctx.request_repaint();
+        // egui won't automatically redraw unless there's some kind of event
+        ui.ctx().request_repaint_after(Duration::from_secs(1));
     }
 }
