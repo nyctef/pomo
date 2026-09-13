@@ -2,6 +2,8 @@
 
 use eframe::egui;
 use egui::{CentralPanel, Context, FontId, RichText, Style, ViewportBuilder};
+use std::thread;
+use std::time::{Duration, SystemTime};
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -13,6 +15,9 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     let ctx = Context::default();
+
+    let bg_ctx = ctx.clone();
+    thread::spawn(|| bg_timer(bg_ctx));
 
     let red = egui::Color32::from_rgb(175, 73, 73);
 
@@ -37,25 +42,44 @@ fn main() -> eframe::Result {
 }
 
 struct MyApp {
-    time: u32,
+    time: SystemTime,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
-        Self { time: 42 }
+        let now = std::time::SystemTime::now();
+        let in_42_seconds = now + Duration::from_secs(42);
+        Self {
+            time: in_42_seconds,
+        }
     }
 }
 
 impl eframe::App for MyApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        let seconds = self
+            .time
+            .duration_since(SystemTime::now())
+            .unwrap_or(Duration::from_secs(0))
+            .as_secs();
         CentralPanel::default().show(ui, |ui| {
             ui.centered_and_justified(|ui| {
                 ui.label(
-                    RichText::new(format!("{}", self.time))
+                    RichText::new(format!("{}", seconds))
                         .font(FontId::proportional(150.0))
                         .strong(),
                 );
             });
         });
+    }
+}
+
+/// thread to update the gui regularly.
+/// This could be improved to only do it while the timer is active and the window is visible
+fn bg_timer(ctx: Context) {
+    let one_second = Duration::from_secs(1);
+    loop {
+        thread::sleep(one_second);
+        ctx.request_repaint();
     }
 }
