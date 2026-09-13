@@ -1,7 +1,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
+use std::fmt::Alignment::Center;
+
 use eframe::egui;
-use egui::{CentralPanel, Context, Slider, Stroke, Style, Theme, ViewportBuilder};
+use egui::{CentralPanel, Context, FontId, RichText, Style, ViewportBuilder};
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -37,32 +39,27 @@ fn main() -> eframe::Result {
 }
 
 struct MyApp {
-    name: String,
-    age: u32,
+    time: u32,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
-        Self {
-            name: "Arthur".to_owned(),
-            age: 42,
-        }
+        Self { time: 42 }
     }
 }
 
 impl eframe::App for MyApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         CentralPanel::default().show(ui, |ui| {
-            ui.horizontal(|ui| {
-                let name_label = ui.label("Your name: ");
-                ui.text_edit_singleline(&mut self.name)
-                    .labelled_by(name_label.id);
+            ui.horizontal_centered(|ui| {
+                ui.vertical_centered_justified(|ui| {
+                    ui.label(
+                        RichText::new(format!("{}", self.time))
+                            .font(FontId::proportional(150.0))
+                            .strong(),
+                    );
+                });
             });
-            ui.add(Slider::new(&mut self.age, 0..=120).text("age"));
-            if ui.button("Increment").clicked() {
-                self.age += 1;
-            }
-            ui.label(format!("Hello '{}', age {}", self.name, self.age));
         });
     }
 }
