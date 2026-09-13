@@ -25,6 +25,12 @@ fn main() -> eframe::Result {
     // Load a sound from a file, using a path relative to Cargo.toml
     let alarm_wav = include_bytes!("../audio/alarm.wav");
 
+    ctx.all_styles_mut(|s| {
+        s.visuals.widgets.inactive.weak_bg_fill =
+            egui::Color32::from_rgba_unmultiplied(0, 0, 0, 30);
+        s.visuals.widgets.hovered.weak_bg_fill = egui::Color32::from_rgba_unmultiplied(0, 0, 0, 50);
+    });
+
     eframe::run_native_ext(
         "My egui App",
         options,
