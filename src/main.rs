@@ -37,7 +37,7 @@ fn main() -> eframe::Result {
     // Note that the playback stops when the handle is dropped.//!
     let sink = rodio::DeviceSinkBuilder::open_default_sink().expect("open default audio stream");
     // Load a sound from a file, using a path relative to Cargo.toml
-    let alarm_wav = File::open("audio/alarm.wav").unwrap();
+    let alarm_wav = include_bytes!("../audio/alarm.wav");
 
     eframe::run_native_ext(
         "My egui App",
@@ -50,16 +50,16 @@ fn main() -> eframe::Result {
 struct MyApp<'m> {
     time: SystemTime,
     mixer: &'m Mixer,
-    alarm_wav: File,
+    alarm_wav: &'static [u8],
     player: Player,
 }
 
 impl<'m> MyApp<'m> {
-    fn new(mixer: &'m Mixer, alarm_wav: File, ahead: u64) -> Self {
+    fn new(mixer: &'m Mixer, alarm_wav: &'static [u8], ahead: u64) -> Self {
         let now = std::time::SystemTime::now();
         let in_42_seconds = now + Duration::from_secs(ahead);
         let player = Player::connect_new(mixer);
-        let decoded = Decoder::new(alarm_wav.try_clone().unwrap()).unwrap();
+        let decoded = Decoder::new(std::io::Cursor::new(alarm_wav)).unwrap();
         player.append(decoded);
         player.pause();
         Self {
@@ -80,8 +80,7 @@ impl<'m> eframe::App for MyApp<'m> {
             .as_secs();
 
         if seconds == 0 {
-            print!("playing");
-            // Play the alarm sound again when the timer reaches zero
+            // TODO: figure out how to reset the player back to the beginning
             self.player.play();
             return;
         }
