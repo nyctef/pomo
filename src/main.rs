@@ -2,6 +2,8 @@
 
 use eframe::egui;
 use egui::{CentralPanel, Context, FontId, RichText, Style, ViewportBuilder};
+use rodio::Decoder;
+use std::fs::File;
 use std::thread;
 use std::time::{Duration, SystemTime};
 
@@ -32,6 +34,14 @@ fn main() -> eframe::Result {
     ctx.all_styles_mut(|style| {
         *style = red_style.clone();
     });
+
+    // Get an OS-Sink handle to the default physical sound device.
+    // Note that the playback stops when the handle is dropped.//!
+    let sink = rodio::DeviceSinkBuilder::open_default_sink().expect("open default audio stream");
+    // Load a sound from a file, using a path relative to Cargo.toml
+    let file = File::open("audio/alarm.wav").unwrap();
+    // Decode that sound file into a source
+    let _player = rodio::play(&sink.mixer(), file).unwrap();
 
     eframe::run_native_ext(
         "My egui App",
@@ -74,8 +84,8 @@ impl eframe::App for MyApp {
     }
 }
 
-/// thread to update the gui regularly.
-/// This could be improved to only do it while the timer is active and the window is visible
+/// by default egui will only update when there's a incoming ui event like a mouse hover.
+/// so we force it to update at least once a second
 fn bg_timer(ctx: Context) {
     let one_second = Duration::from_secs(1);
     loop {
