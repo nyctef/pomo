@@ -73,29 +73,44 @@ impl<'m> MyApp<'m> {
 
 impl<'m> eframe::App for MyApp<'m> {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        let seconds = self
-            .time
-            .duration_since(SystemTime::now())
-            .unwrap_or(Duration::from_secs(0))
-            .as_secs();
-
-        if seconds == 0 {
-            // TODO: figure out how to reset the player back to the beginning
-            self.player.play();
-            return;
-        }
-
         CentralPanel::default().show(ui, |ui| {
-            ui.centered_and_justified(|ui| {
-                ui.label(
-                    RichText::new(format!("{}", seconds))
-                        .font(FontId::proportional(150.0))
-                        .strong(),
-                );
-            });
+            if ui.is_pointer_over_egui() {
+                show_controls(self, ui);
+            } else {
+                show_countdown(self, ui);
+            }
         });
-
-        // egui won't automatically redraw unless there's some kind of event
-        ui.ctx().request_repaint_after(Duration::from_secs(1));
     }
+}
+
+fn show_controls<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) -> () {
+    ui.centered_and_justified(|ui| {
+        let pause = ui.button(
+            RichText::new("⏸")
+                .font(FontId::proportional(150.0))
+                .strong(),
+        );
+    });
+}
+
+fn show_countdown<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) -> () {
+    let seconds = app
+        .time
+        .duration_since(SystemTime::now())
+        .unwrap_or(Duration::from_secs(0))
+        .as_secs();
+    if seconds == 0 {
+        // TODO: figure out how to reset the player back to the beginning
+        app.player.play();
+    }
+    ui.centered_and_justified(|ui| {
+        ui.label(
+            RichText::new(format!("{}", seconds))
+                .font(FontId::proportional(150.0))
+                .strong(),
+        );
+    });
+
+    // egui won't automatically redraw unless there's some kind of event
+    ui.ctx().request_repaint_after(Duration::from_secs(1));
 }
