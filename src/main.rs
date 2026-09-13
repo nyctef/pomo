@@ -52,8 +52,15 @@ struct Countdown {
     pub kind: CountdownType,
 }
 
+#[derive(Clone, Copy)]
+struct Pause {
+    pub remaining_s: u64,
+    pub kind: CountdownType,
+}
+
 enum AppState {
-    Countdown(Countdown),
+    Counting(Countdown),
+    Paused(Pause),
     Completed,
 }
 
@@ -63,7 +70,7 @@ impl<'m> MyApp<'m> {
         let deadline = now + Duration::from_secs(ahead);
         let player = Player::connect_new(mixer);
         Self {
-            state: AppState::Countdown(Countdown {
+            state: AppState::Counting(Countdown {
                 deadline,
                 kind: CountdownType::Work,
             }),
@@ -86,6 +93,16 @@ impl<'m> MyApp<'m> {
         self.player.append(decoder);
         self.state = AppState::Completed;
     }
+
+    fn pause(&mut self) {
+        if let AppState::Counting(countdown) = self.state {
+            let remaining_s = Self::seconds_remaining(countdown);
+            self.state = AppState::Paused(Pause {
+                remaining_s,
+                kind: countdown.kind,
+            });
+        }
+    }
 }
 
 impl<'m> eframe::App for MyApp<'m> {
@@ -95,7 +112,7 @@ impl<'m> eframe::App for MyApp<'m> {
             if ui.is_pointer_over_egui() {
                 show_controls(self, ui);
             } else {
-                if let AppState::Countdown(countdown) = self.state {
+                if let AppState::Counting(countdown) = self.state {
                     show_countdown(self, countdown, ui);
                 }
 
@@ -112,12 +129,20 @@ impl<'m> eframe::App for MyApp<'m> {
 }
 
 fn get_bg_color(state: &AppState) -> egui::Color32 {
+    let red = egui::Color32::from_rgb(175, 73, 73);
+    let green = egui::Color32::from_rgb(73, 175, 73);
+    let blue = egui::Color32::from_rgb(73, 73, 175);
+    let black = egui::Color32::from_rgb(0, 0, 0);
     match state {
-        AppState::Countdown(countdown) => match countdown.kind {
-            CountdownType::Work => egui::Color32::from_rgb(175, 73, 73),
-            CountdownType::Break => egui::Color32::from_rgb(73, 175, 73),
+        AppState::Counting(countdown) => match countdown.kind {
+            CountdownType::Work => red,
+            CountdownType::Break => green,
         },
-        AppState::Completed => egui::Color32::from_rgb(73, 73, 175),
+        AppState::Paused(pause) => match pause.kind {
+            CountdownType::Work => red.lerp_to_gamma(black, 0.7),
+            CountdownType::Break => green.lerp_to_gamma(black, 0.7),
+        },
+        AppState::Completed => blue,
     }
 }
 
@@ -128,6 +153,9 @@ fn show_controls<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) -> () {
                 .font(FontId::proportional(150.0))
                 .strong(),
         );
+        if pause.clicked() {
+            app.pause();
+        }
     });
 }
 
