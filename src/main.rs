@@ -1,7 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use eframe::egui;
-use egui::{CentralPanel, Context, FontId, RichText, Style, ViewportBuilder};
+use egui::{CentralPanel, Context, FontId, Frame, RichText, Style, ViewportBuilder, frame};
 use rodio::mixer::Mixer;
 use rodio::{Decoder, Player};
 use std::fs::File;
@@ -19,20 +19,6 @@ fn main() -> eframe::Result {
     };
     let ctx = Context::default();
 
-    let red = egui::Color32::from_rgb(175, 73, 73);
-
-    // let mut light_style = Style::default();
-    // light_style.visuals.window_fill = red;
-    // ctx.set_style_of(Theme::Light, light_style);
-
-    let mut red_style = Style::default();
-    // red_style.visuals.window_fill = red;
-    red_style.visuals.panel_fill = red;
-    // ctx.set_style_of(Theme::Dark, dark_style);
-    ctx.all_styles_mut(|style| {
-        *style = red_style.clone();
-    });
-
     // Get an OS-Sink handle to the default physical sound device.
     // Note that the playback stops when the handle is dropped.//!
     let sink = rodio::DeviceSinkBuilder::open_default_sink().expect("open default audio stream");
@@ -48,45 +34,90 @@ fn main() -> eframe::Result {
 }
 
 struct MyApp<'m> {
-    time: SystemTime,
+    state: AppState,
     mixer: &'m Mixer,
     alarm_wav: &'static [u8],
     player: Player,
 }
 
+#[derive(Clone, Copy)]
+enum CountdownType {
+    Work,
+    Break,
+}
+
+#[derive(Clone, Copy)]
+struct Countdown {
+    pub deadline: SystemTime,
+    pub kind: CountdownType,
+}
+
+enum AppState {
+    Countdown(Countdown),
+    Completed,
+}
+
 impl<'m> MyApp<'m> {
     fn new(mixer: &'m Mixer, alarm_wav: &'static [u8], ahead: u64) -> Self {
         let now = std::time::SystemTime::now();
-        let in_42_seconds = now + Duration::from_secs(ahead);
+        let deadline = now + Duration::from_secs(ahead);
         let player = Player::connect_new(mixer);
-        let decoded = Decoder::new(std::io::Cursor::new(alarm_wav)).unwrap();
-        player.append(decoded);
-        player.pause();
         Self {
-            time: in_42_seconds,
+            state: AppState::Countdown(Countdown {
+                deadline,
+                kind: CountdownType::Work,
+            }),
             mixer,
             alarm_wav,
             player,
         }
     }
 
-    fn seconds_remaining(&self) -> u64 {
-        self.time
+    fn seconds_remaining(countdown: Countdown) -> u64 {
+        countdown
+            .deadline
             .duration_since(SystemTime::now())
             .unwrap_or(Duration::from_secs(0))
             .as_secs()
+    }
+
+    fn play_alarm(&mut self) {
+        let decoder = Decoder::new(std::io::Cursor::new(self.alarm_wav)).unwrap();
+        self.player.append(decoder);
+        self.state = AppState::Completed;
     }
 }
 
 impl<'m> eframe::App for MyApp<'m> {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        CentralPanel::default().show(ui, |ui| {
+        let frame = Frame::default().fill(get_bg_color(&self.state));
+        CentralPanel::default().frame(frame).show(ui, |ui| {
             if ui.is_pointer_over_egui() {
                 show_controls(self, ui);
             } else {
-                show_countdown(self, ui);
+                if let AppState::Countdown(countdown) = self.state {
+                    show_countdown(self, countdown, ui);
+                }
+
+                if let AppState::Completed = self.state {
+                    ui.label(
+                        RichText::new("✅")
+                            .font(FontId::proportional(150.0))
+                            .strong(),
+                    );
+                }
             }
         });
+    }
+}
+
+fn get_bg_color(state: &AppState) -> egui::Color32 {
+    match state {
+        AppState::Countdown(countdown) => match countdown.kind {
+            CountdownType::Work => egui::Color32::from_rgb(175, 73, 73),
+            CountdownType::Break => egui::Color32::from_rgb(73, 175, 73),
+        },
+        AppState::Completed => egui::Color32::from_rgb(73, 73, 175),
     }
 }
 
@@ -100,11 +131,10 @@ fn show_controls<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) -> () {
     });
 }
 
-fn show_countdown<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) -> () {
-    let seconds = app.seconds_remaining();
+fn show_countdown<'m>(app: &mut MyApp<'m>, countdown: Countdown, ui: &mut egui::Ui) -> () {
+    let seconds = MyApp::seconds_remaining(countdown);
     if seconds == 0 {
-        // TODO: figure out how to reset the player back to the beginning
-        app.player.play();
+        app.play_alarm();
     }
     ui.centered_and_justified(|ui| {
         ui.label(
