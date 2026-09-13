@@ -69,6 +69,13 @@ impl<'m> MyApp<'m> {
             player,
         }
     }
+
+    fn seconds_remaining(&self) -> u64 {
+        self.time
+            .duration_since(SystemTime::now())
+            .unwrap_or(Duration::from_secs(0))
+            .as_secs()
+    }
 }
 
 impl<'m> eframe::App for MyApp<'m> {
@@ -94,11 +101,7 @@ fn show_controls<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) -> () {
 }
 
 fn show_countdown<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) -> () {
-    let seconds = app
-        .time
-        .duration_since(SystemTime::now())
-        .unwrap_or(Duration::from_secs(0))
-        .as_secs();
+    let seconds = app.seconds_remaining();
     if seconds == 0 {
         // TODO: figure out how to reset the player back to the beginning
         app.player.play();
