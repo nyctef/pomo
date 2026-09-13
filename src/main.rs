@@ -1,20 +1,38 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use eframe::egui;
+use egui::{CentralPanel, Context, Slider, Stroke, Style, Theme, ViewportBuilder};
 
 fn main() -> eframe::Result {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let options = eframe::NativeOptions {
-        viewport: egui::ViewportBuilder::default().with_inner_size([320.0, 240.0]),
+        viewport: ViewportBuilder::default()
+            .with_inner_size([320.0, 240.0])
+            .with_decorations(false)
+            .with_always_on_top(),
         ..Default::default()
     };
-    eframe::run_native(
+    let ctx = Context::default();
+
+    let red = egui::Color32::from_rgb(175, 73, 73);
+
+    // let mut light_style = Style::default();
+    // light_style.visuals.window_fill = red;
+    // ctx.set_style_of(Theme::Light, light_style);
+
+    let mut red_style = Style::default();
+    // red_style.visuals.window_fill = red;
+    red_style.visuals.panel_fill = red;
+    // ctx.set_style_of(Theme::Dark, dark_style);
+    ctx.all_styles_mut(|style| {
+        *style = red_style.clone();
+    });
+
+    eframe::run_native_ext(
         "My egui App",
         options,
-        Box::new(|cc| {
-
-            Ok(Box::<MyApp>::default())
-        }),
+        Some(ctx),
+        Box::new(|_cc| Ok(Box::<MyApp>::default())),
     )
 }
 
@@ -34,14 +52,13 @@ impl Default for MyApp {
 
 impl eframe::App for MyApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
-        egui::CentralPanel::default().show(ui, |ui| {
-            ui.heading("My egui Application");
+        CentralPanel::default().show(ui, |ui| {
             ui.horizontal(|ui| {
                 let name_label = ui.label("Your name: ");
                 ui.text_edit_singleline(&mut self.name)
                     .labelled_by(name_label.id);
             });
-            ui.add(egui::Slider::new(&mut self.age, 0..=120).text("age"));
+            ui.add(Slider::new(&mut self.age, 0..=120).text("age"));
             if ui.button("Increment").clicked() {
                 self.age += 1;
             }
