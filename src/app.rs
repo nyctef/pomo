@@ -27,11 +27,17 @@ pub struct Pause {
     pub kind: CountdownType,
 }
 
+#[derive(Clone, Copy)]
+pub struct Intermission {
+    pub last_reminder: SystemTime,
+    pub next_kind: CountdownType,
+}
+
 #[derive(Clone)]
 pub enum AppState {
     Counting(Countdown),
     Paused(Pause),
-    Completed,
+    Completed(Intermission),
 }
 
 impl<'m> MyApp<'m> {
