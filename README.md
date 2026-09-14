@@ -7,3 +7,4 @@ inspired by pomofocus.io, but I wanted something that would be a bit more insist
 audio credits:
 
 - alarm sound: Sound Effect by [Universfield](https://pixabay.com/users/universfield-28281460) from Pixabay
+- ping sound: Sound Effect by [freesound_community](https://pixabay.com/users/freesound_community-46691455)from Pixabay
