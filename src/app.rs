@@ -64,10 +64,13 @@ impl<'m> MyApp<'m> {
             .as_secs()
     }
 
-    fn play_alarm(&mut self) {
+    fn play_alarm(&mut self, countdown: &Countdown) {
         let decoder = Decoder::new(std::io::Cursor::new(self.alarm_wav)).unwrap();
         self.player.append(decoder);
-        self.state = AppState::Completed;
+        self.state = AppState::Completed(Intermission {
+            last_reminder: SystemTime::now(),
+            next_kind: flip_countdown_type(countdown.kind),
+        });
     }
 
     pub fn pause(&mut self) {
@@ -84,12 +87,19 @@ impl<'m> MyApp<'m> {
         if let AppState::Counting(countdown) = self.state {
             let seconds = Self::seconds_remaining(countdown);
             if seconds == 0 {
-                self.play_alarm();
+                self.play_alarm(&countdown);
             }
         }
     }
 
     pub fn get_state(&self) -> AppState {
         self.state.clone()
+    }
+}
+
+fn flip_countdown_type(kind: CountdownType) -> CountdownType {
+    match kind {
+        CountdownType::Work => CountdownType::Break,
+        CountdownType::Break => CountdownType::Work,
     }
 }

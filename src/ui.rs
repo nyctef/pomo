@@ -20,7 +20,7 @@ impl<'m> eframe::App for MyApp<'m> {
                     show_pause(self, pause, ui);
                 }
 
-                if let AppState::Completed = state {
+                if let AppState::Completed(_) = state {
                     show_completed(self, ui);
                 }
             }
@@ -45,7 +45,7 @@ fn get_bg_color(state: &AppState) -> egui::Color32 {
             CountdownType::Work => red.lerp_to_gamma(black, 0.7),
             CountdownType::Break => green.lerp_to_gamma(black, 0.7),
         },
-        AppState::Completed => blue,
+        AppState::Completed(_) => blue,
     }
 }
 
