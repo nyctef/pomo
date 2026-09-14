@@ -73,12 +73,30 @@ impl<'m> MyApp<'m> {
         });
     }
 
-    pub fn pause(&mut self) {
+    pub fn play_pause(&mut self) {
         if let AppState::Counting(countdown) = self.state {
             let remaining_s = Self::seconds_remaining(countdown);
             self.state = AppState::Paused(Pause {
                 remaining_s,
                 kind: countdown.kind,
+            });
+            return;
+        }
+
+        if let AppState::Paused(pause) = self.state {
+            let deadline = SystemTime::now() + Duration::from_secs(pause.remaining_s);
+            self.state = AppState::Counting(Countdown {
+                deadline,
+                kind: pause.kind,
+            });
+            return;
+        }
+
+        if let AppState::Completed(intermission) = self.state {
+            let deadline = SystemTime::now() + Duration::from_secs(3);
+            self.state = AppState::Counting(Countdown {
+                deadline,
+                kind: intermission.next_kind,
             });
         }
     }

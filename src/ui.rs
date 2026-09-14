@@ -51,13 +51,18 @@ fn get_bg_color(state: &AppState) -> egui::Color32 {
 
 fn show_controls<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) {
     ui.centered_and_justified(|ui| {
-        let pause = ui.button(
-            RichText::new("⏸")
+        let icon = match app.get_state() {
+            AppState::Counting(_) => "⏸",
+            AppState::Paused(_) => "▶",
+            AppState::Completed(_) => "▶",
+        };
+        let play_pause = ui.button(
+            RichText::new(icon)
                 .font(FontId::proportional(150.0))
                 .strong(),
         );
-        if pause.clicked() {
-            app.pause();
+        if play_pause.clicked() {
+            app.play_pause();
         }
     });
 }

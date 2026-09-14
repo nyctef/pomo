@@ -1,3 +1,10 @@
+
+up next:
+- try to get a complete loop with play/pause
+- just one button for now - add skip etc later
+- add pulsing
+- add overlay during breaks
+
 states:
 
 - Counting (deadline)
