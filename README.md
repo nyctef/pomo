@@ -6,4 +6,4 @@ inspired by pomofocus.io, but I wanted something that would be a bit more insist
 
 audio credits:
 
-- alarm sound: Sound Effect by <a href="https://pixabay.com/users/universfield-28281460/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=229175">Universfield</a> from <a href="https://pixabay.com/sound-effects//?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=229175">Pixabay</a>
+- alarm sound: Sound Effect by [Universfield](https://pixabay.com/users/universfield-28281460) from Pixabay
