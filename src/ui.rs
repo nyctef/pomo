@@ -79,9 +79,10 @@ fn show_pause<'m>(_app: &mut MyApp<'m>, pause: Pause, ui: &mut egui::Ui) {
 
 fn show_countdown<'m>(_app: &mut MyApp<'m>, countdown: Countdown, ui: &mut egui::Ui) {
     let seconds = MyApp::seconds_remaining(countdown);
+    let count = if seconds > 60 { seconds / 60 } else { seconds };
     ui.centered_and_justified(|ui| {
         ui.label(
-            RichText::new(format!("{}", seconds))
+            RichText::new(format!("{}", count))
                 .font(FontId::proportional(150.0))
                 .strong(),
         );
