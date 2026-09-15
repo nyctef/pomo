@@ -85,9 +85,11 @@ fn show_controls<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) {
 }
 
 fn show_pause<'m>(_app: &mut MyApp<'m>, pause: Pause, ui: &mut egui::Ui) {
+    let seconds = pause.remaining_s;
+    let count = if seconds > 60 { seconds / 60 } else { seconds };
     ui.centered_and_justified(|ui| {
         ui.label(
-            RichText::new(format!("{}", pause.remaining_s))
+            RichText::new(format!("{}", count))
                 .font(FontId::proportional(150.0))
                 .strong(),
         );
