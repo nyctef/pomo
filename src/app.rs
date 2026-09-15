@@ -1,6 +1,7 @@
 use rodio::mixer::Mixer;
 use rodio::{Decoder, Player};
 use std::time::{Duration, SystemTime};
+use log;
 
 pub struct MyApp<'m> {
     state: AppState,
@@ -46,9 +47,9 @@ impl<'m> MyApp<'m> {
         let deadline = now + Duration::from_secs(ahead);
         let player = Player::connect_new(mixer);
         Self {
-            state: AppState::Counting(Countdown {
-                deadline,
-                kind: CountdownType::Work,
+            state: AppState::Completed(Intermission {
+                last_reminder: now,
+                next_kind: CountdownType::Work,
             }),
             mixer,
             alarm_wav,
@@ -74,6 +75,7 @@ impl<'m> MyApp<'m> {
     }
 
     pub fn play_pause(&mut self) {
+        log::debug!("play_pause() called");
         if let AppState::Counting(countdown) = self.state {
             let remaining_s = Self::seconds_remaining(countdown);
             self.state = AppState::Paused(Pause {
@@ -93,7 +95,7 @@ impl<'m> MyApp<'m> {
         }
 
         if let AppState::Completed(intermission) = self.state {
-            let deadline = SystemTime::now() + Duration::from_secs(3);
+            let deadline = SystemTime::now() + duration_for_type(intermission.next_kind);
             self.state = AppState::Counting(Countdown {
                 deadline,
                 kind: intermission.next_kind,
@@ -119,5 +121,12 @@ fn flip_countdown_type(kind: CountdownType) -> CountdownType {
     match kind {
         CountdownType::Work => CountdownType::Break,
         CountdownType::Break => CountdownType::Work,
+    }
+}
+
+fn duration_for_type(kind: CountdownType) -> Duration {
+    match kind {
+        CountdownType::Work => Duration::from_mins(25),
+        CountdownType::Break => Duration::from_mins(5),
     }
 }
