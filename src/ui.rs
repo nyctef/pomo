@@ -1,7 +1,8 @@
 use crate::app::{AppState, Countdown, CountdownType, MyApp, Pause};
-use egui::{CentralPanel, FontId, Frame, RichText, Id, Sense};
+use egui::{CentralPanel, FontId, Frame, RichText, Id, Sense, Button};
 use eframe::egui::ViewportCommand;
 use std::time::Duration;
+use log;
 
 impl<'m> eframe::App for MyApp<'m> {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
@@ -26,10 +27,6 @@ impl<'m> eframe::App for MyApp<'m> {
                 }
             }
         });
-
-        if ui.interact(ui.max_rect(), Id::new("window-drag"), Sense::drag()).dragged() {
-            ui.send_viewport_cmd(ViewportCommand::StartDrag);
-        }
 
         // egui won't automatically redraw unless there's some kind of event
         ui.ctx().request_repaint_after(Duration::from_secs(1));
@@ -61,12 +58,27 @@ fn show_controls<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) {
             AppState::Paused(_) => "▶",
             AppState::Completed(_) => "▶",
         };
-        let play_pause = ui.button(
+        let play_pause = Button::new(
             RichText::new(icon)
                 .font(FontId::proportional(150.0))
                 .strong(),
-        );
-        if play_pause.clicked() {
+        ).sense(Sense::click_and_drag());
+
+        let button_response = ui.add(play_pause);
+
+        if button_response.drag_started() {
+            // TODO: figure out if we can initiate a window drag from anywhere in the window,
+            // not just this one button. The tricky part is we need a widget that senses
+            // both click and drag, so egui will attempt to disambiguate it for us - if
+            // we hook up logic to a widget that only senses drags, then the drag start
+            // fires as soon as the mouse is clicked without waiting for a wait or movement.
+            //
+            // (apparently something around Ui::scope_builder might help here?)
+            log::debug!("window drag started");
+            ui.send_viewport_cmd(ViewportCommand::StartDrag);
+        }
+
+        if button_response.clicked() {
             app.play_pause();
         }
     });
