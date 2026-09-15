@@ -3,7 +3,7 @@ use rodio::{Decoder, Player};
 use std::time::{Duration, SystemTime};
 use log;
 
-pub struct MyApp<'m> {
+pub struct PomoApp<'m> {
     state: AppState,
     mixer: &'m Mixer,
     alarm_wav: &'static [u8],
@@ -41,7 +41,7 @@ pub enum AppState {
     Completed(Intermission),
 }
 
-impl<'m> MyApp<'m> {
+impl<'m> PomoApp<'m> {
     pub fn new(mixer: &'m Mixer, alarm_wav: &'static [u8], ahead: u64) -> Self {
         let now = std::time::SystemTime::now();
         let deadline = now + Duration::from_secs(ahead);

@@ -1,10 +1,10 @@
-use crate::app::{AppState, Countdown, CountdownType, MyApp, Pause};
+use crate::app::{AppState, Countdown, CountdownType, PomoApp, Pause};
 use egui::{CentralPanel, FontId, Frame, RichText, Id, Sense, Button};
 use eframe::egui::ViewportCommand;
 use std::time::Duration;
 use log;
 
-impl<'m> eframe::App for MyApp<'m> {
+impl<'m> eframe::App for PomoApp<'m> {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.update();
 
@@ -51,7 +51,7 @@ fn get_bg_color(state: &AppState) -> egui::Color32 {
     }
 }
 
-fn show_controls<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) {
+fn show_controls<'m>(app: &mut PomoApp<'m>, ui: &mut egui::Ui) {
     ui.centered_and_justified(|ui| {
         let icon = match app.get_state() {
             AppState::Counting(_) => "⏸",
@@ -84,7 +84,7 @@ fn show_controls<'m>(app: &mut MyApp<'m>, ui: &mut egui::Ui) {
     });
 }
 
-fn show_pause<'m>(_app: &mut MyApp<'m>, pause: Pause, ui: &mut egui::Ui) {
+fn show_pause<'m>(_app: &mut PomoApp<'m>, pause: Pause, ui: &mut egui::Ui) {
     let seconds = pause.remaining_s;
     let count = if seconds > 60 { seconds / 60 } else { seconds };
     ui.centered_and_justified(|ui| {
@@ -96,8 +96,8 @@ fn show_pause<'m>(_app: &mut MyApp<'m>, pause: Pause, ui: &mut egui::Ui) {
     });
 }
 
-fn show_countdown<'m>(_app: &mut MyApp<'m>, countdown: Countdown, ui: &mut egui::Ui) {
-    let seconds = MyApp::seconds_remaining(countdown);
+fn show_countdown<'m>(_app: &mut PomoApp<'m>, countdown: Countdown, ui: &mut egui::Ui) {
+    let seconds = PomoApp::seconds_remaining(countdown);
     let count = if seconds > 60 { seconds / 60 } else { seconds };
     ui.centered_and_justified(|ui| {
         ui.label(
@@ -108,7 +108,7 @@ fn show_countdown<'m>(_app: &mut MyApp<'m>, countdown: Countdown, ui: &mut egui:
     });
 }
 
-fn show_completed<'m>(_app: &mut MyApp<'m>, ui: &mut egui::Ui) {
+fn show_completed<'m>(_app: &mut PomoApp<'m>, ui: &mut egui::Ui) {
     ui.centered_and_justified(|ui| {
         ui.label(
             RichText::new("✅")

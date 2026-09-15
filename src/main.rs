@@ -3,7 +3,7 @@
 mod app;
 mod ui;
 
-use app::MyApp;
+use app::PomoApp;
 use eframe::egui;
 use egui::{Context, ViewportBuilder};
 
@@ -31,9 +31,9 @@ fn main() -> eframe::Result {
     });
 
     eframe::run_native_ext(
-        "My egui App",
+        "pomo",
         options,
         Some(ctx),
-        Box::new(|_cc| Ok(Box::<MyApp>::new(MyApp::new(sink.mixer(), alarm_wav, 3)))),
+        Box::new(|_cc| Ok(Box::<PomoApp>::new(PomoApp::new(sink.mixer(), alarm_wav, 3)))),
     )
 }
