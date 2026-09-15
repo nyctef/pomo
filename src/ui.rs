@@ -1,5 +1,6 @@
 use crate::app::{AppState, Countdown, CountdownType, MyApp, Pause};
-use egui::{CentralPanel, FontId, Frame, RichText};
+use egui::{CentralPanel, FontId, Frame, RichText, Id, Sense};
+use eframe::egui::ViewportCommand;
 use std::time::Duration;
 
 impl<'m> eframe::App for MyApp<'m> {
@@ -25,6 +26,10 @@ impl<'m> eframe::App for MyApp<'m> {
                 }
             }
         });
+
+        if ui.interact(ui.max_rect(), Id::new("window-drag"), Sense::drag()).dragged() {
+            ui.send_viewport_cmd(ViewportCommand::StartDrag);
+        }
 
         // egui won't automatically redraw unless there's some kind of event
         ui.ctx().request_repaint_after(Duration::from_secs(1));
