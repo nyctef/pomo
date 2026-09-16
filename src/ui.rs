@@ -1,6 +1,6 @@
 use crate::app::{AppState, Countdown, CountdownType, Intermission, Pause, PomoApp};
 use eframe::egui::ViewportCommand;
-use egui::{Button, CentralPanel, FontId, Frame, Id, RichText, Sense};
+use egui::{Button, CentralPanel, FontId, Frame, Id, RichText, Sense, Layout, Align};
 use log;
 use std::time::Duration;
 
@@ -52,36 +52,42 @@ fn get_bg_color(state: &AppState) -> egui::Color32 {
 }
 
 fn show_controls<'m>(app: &mut PomoApp<'m>, ui: &mut egui::Ui) {
-    ui.centered_and_justified(|ui| {
-        let icon = match app.get_state() {
-            AppState::Counting(_) => "⏸",
-            AppState::Paused(_) => "▶",
-            AppState::Completed(_) => "▶",
-        };
-        let play_pause = Button::new(
-            RichText::new(icon)
-                .font(FontId::proportional(150.0))
-                .strong(),
-        )
-        .sense(Sense::click_and_drag());
+    ui.vertical_centered_justified(|ui| {
+        ui.columns(2, |cols| {
+            let _ = cols[0].button("skip");
+            let _ = cols[1].button("quit");
+        });
+        ui.centered_and_justified(|ui| {
+            let icon = match app.get_state() {
+                AppState::Counting(_) => "⏸",
+                AppState::Paused(_) => "▶",
+                AppState::Completed(_) => "▶",
+            };
+            let play_pause = Button::new(
+                RichText::new(icon)
+                    .font(FontId::proportional(150.0))
+                    .strong(),
+            )
+            .sense(Sense::click_and_drag());
 
-        let button_response = ui.add(play_pause);
+            let button_response = ui.add(play_pause);
 
-        if button_response.drag_started() {
-            // TODO: figure out if we can initiate a window drag from anywhere in the window,
-            // not just this one button. The tricky part is we need a widget that senses
-            // both click and drag, so egui will attempt to disambiguate it for us - if
-            // we hook up logic to a widget that only senses drags, then the drag start
-            // fires as soon as the mouse is clicked without waiting for a wait or movement.
-            //
-            // (apparently something around Ui::scope_builder might help here?)
-            log::debug!("window drag started");
-            ui.send_viewport_cmd(ViewportCommand::StartDrag);
-        }
+            if button_response.drag_started() {
+                // TODO: figure out if we can initiate a window drag from anywhere in the window,
+                // not just this one button. The tricky part is we need a widget that senses
+                // both click and drag, so egui will attempt to disambiguate it for us - if
+                // we hook up logic to a widget that only senses drags, then the drag start
+                // fires as soon as the mouse is clicked without waiting for a wait or movement.
+                //
+                // (apparently something around Ui::scope_builder might help here?)
+                log::debug!("window drag started");
+                ui.send_viewport_cmd(ViewportCommand::StartDrag);
+            }
 
-        if button_response.clicked() {
-            app.play_pause();
-        }
+            if button_response.clicked() {
+                app.play_pause();
+            }
+        });
     });
 }
 
