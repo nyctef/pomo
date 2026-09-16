@@ -34,6 +34,12 @@ fn main() -> eframe::Result {
         "pomo",
         options,
         Some(ctx),
-        Box::new(|_cc| Ok(Box::<PomoApp>::new(PomoApp::new(sink.mixer(), alarm_wav, 3)))),
+        Box::new(|_cc| {
+            Ok(Box::<PomoApp>::new(PomoApp::new(
+                sink.mixer(),
+                alarm_wav,
+                3,
+            )))
+        }),
     )
 }

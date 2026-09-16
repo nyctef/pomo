@@ -1,7 +1,7 @@
+use log;
 use rodio::mixer::Mixer;
 use rodio::{Decoder, Player};
 use std::time::{Duration, SystemTime};
-use log;
 
 pub struct PomoApp<'m> {
     state: AppState,
@@ -10,7 +10,7 @@ pub struct PomoApp<'m> {
     player: Player,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum CountdownType {
     Work,
     Break,

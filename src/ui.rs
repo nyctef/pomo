@@ -1,8 +1,8 @@
-use crate::app::{AppState, Countdown, CountdownType, PomoApp, Pause};
-use egui::{CentralPanel, FontId, Frame, RichText, Id, Sense, Button};
+use crate::app::{AppState, Countdown, CountdownType, Intermission, Pause, PomoApp};
 use eframe::egui::ViewportCommand;
-use std::time::Duration;
+use egui::{Button, CentralPanel, FontId, Frame, Id, RichText, Sense};
 use log;
+use std::time::Duration;
 
 impl<'m> eframe::App for PomoApp<'m> {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
@@ -22,8 +22,8 @@ impl<'m> eframe::App for PomoApp<'m> {
                     show_pause(self, pause, ui);
                 }
 
-                if let AppState::Completed(_) = state {
-                    show_completed(self, ui);
+                if let AppState::Completed(intermission) = state {
+                    show_completed(self, intermission, ui);
                 }
             }
         });
@@ -62,7 +62,8 @@ fn show_controls<'m>(app: &mut PomoApp<'m>, ui: &mut egui::Ui) {
             RichText::new(icon)
                 .font(FontId::proportional(150.0))
                 .strong(),
-        ).sense(Sense::click_and_drag());
+        )
+        .sense(Sense::click_and_drag());
 
         let button_response = ui.add(play_pause);
 
@@ -108,11 +109,16 @@ fn show_countdown<'m>(_app: &mut PomoApp<'m>, countdown: Countdown, ui: &mut egu
     });
 }
 
-fn show_completed<'m>(_app: &mut PomoApp<'m>, ui: &mut egui::Ui) {
+fn show_completed<'m>(_app: &mut PomoApp<'m>, intermission: Intermission, ui: &mut egui::Ui) {
+    let label = if intermission.next_kind == CountdownType::Work {
+        "work time"
+    } else {
+        "break time!"
+    };
     ui.centered_and_justified(|ui| {
         ui.label(
-            RichText::new("✅")
-                .font(FontId::proportional(150.0))
+            RichText::new(label)
+                .font(FontId::proportional(50.0))
                 .strong(),
         );
     });
