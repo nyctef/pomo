@@ -54,8 +54,12 @@ fn get_bg_color(state: &AppState) -> egui::Color32 {
 fn show_controls<'m>(app: &mut PomoApp<'m>, ui: &mut egui::Ui) {
     ui.vertical_centered_justified(|ui| {
         ui.columns(2, |cols| {
-            let _ = cols[0].button("⏭");
-            let _ = cols[1].button("🗙");
+            if cols[0].button("⏭").clicked() {
+                app.skip();
+            }
+            if cols[1].button("🗙").clicked() {
+                cols[1].send_viewport_cmd(ViewportCommand::Close);
+            }
         });
         ui.centered_and_justified(|ui| {
             let icon = match app.get_state() {

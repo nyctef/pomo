@@ -103,6 +103,19 @@ impl<'m> PomoApp<'m> {
         }
     }
 
+    pub fn skip(&mut self) {
+        // jump to state just before the next countdown
+        let next_kind = match self.state {
+            AppState::Counting(countdown) => flip_countdown_type(countdown.kind),
+            AppState::Paused(pause) => flip_countdown_type(pause.kind),
+            AppState::Completed(intermission) => flip_countdown_type(intermission.next_kind),
+        };
+        self.state = AppState::Completed(Intermission {
+            last_reminder: SystemTime::now(),
+            next_kind,
+        });
+    }
+
     pub fn update(&mut self) {
         if let AppState::Counting(countdown) = self.state {
             let seconds = Self::seconds_remaining(countdown);
