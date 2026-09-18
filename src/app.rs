@@ -3,9 +3,8 @@ use rodio::mixer::Mixer;
 use rodio::{Decoder, Player};
 use std::time::{Duration, SystemTime};
 
-pub struct PomoApp<'m> {
+pub struct PomoApp {
     state: AppState,
-    mixer: &'m Mixer,
     alarm_wav: &'static [u8],
     ping_wav: &'static [u8],
     player: Player,
@@ -42,10 +41,9 @@ pub enum AppState {
     Completed(Intermission),
 }
 
-impl<'m> PomoApp<'m> {
-    pub fn new(mixer: &'m Mixer, ahead: u64) -> Self {
+impl PomoApp {
+    pub fn new<'m>(mixer: &'m Mixer) -> Self {
         let now = std::time::SystemTime::now();
-        let deadline = now + Duration::from_secs(ahead);
         let player = Player::connect_new(mixer);
 
         let alarm_wav = include_bytes!("../audio/alarm.wav");
@@ -55,7 +53,6 @@ impl<'m> PomoApp<'m> {
                 last_reminder: now,
                 next_kind: CountdownType::Work,
             }),
-            mixer,
             alarm_wav,
             ping_wav,
             player,

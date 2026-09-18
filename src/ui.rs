@@ -1,10 +1,10 @@
 use crate::app::{AppState, Countdown, CountdownType, Intermission, Pause, PomoApp};
 use eframe::egui::ViewportCommand;
-use egui::{Align, Button, CentralPanel, FontId, Frame, Id, Layout, RichText, Sense};
+use egui::{Button, CentralPanel, FontId, Frame, RichText, Sense};
 use log;
 use std::time::Duration;
 
-impl<'m> eframe::App for PomoApp<'m> {
+impl eframe::App for PomoApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.update();
 
@@ -15,15 +15,15 @@ impl<'m> eframe::App for PomoApp<'m> {
                 show_controls(self, ui);
             } else {
                 if let AppState::Counting(countdown) = state {
-                    show_countdown(self, countdown, ui);
+                    show_countdown(countdown, ui);
                 }
 
                 if let AppState::Paused(pause) = state {
-                    show_pause(self, pause, ui);
+                    show_pause(pause, ui);
                 }
 
                 if let AppState::Completed(intermission) = state {
-                    show_completed(self, intermission, ui);
+                    show_completed(intermission, ui);
                 }
             }
         });
@@ -51,7 +51,7 @@ fn get_bg_color(state: &AppState) -> egui::Color32 {
     }
 }
 
-fn show_controls<'m>(app: &mut PomoApp<'m>, ui: &mut egui::Ui) {
+fn show_controls(app: &mut PomoApp, ui: &mut egui::Ui) {
     ui.vertical_centered_justified(|ui| {
         ui.columns(2, |cols| {
             if cols[0].button("⏭").clicked() {
@@ -95,7 +95,7 @@ fn show_controls<'m>(app: &mut PomoApp<'m>, ui: &mut egui::Ui) {
     });
 }
 
-fn show_pause<'m>(_app: &mut PomoApp<'m>, pause: Pause, ui: &mut egui::Ui) {
+fn show_pause(pause: Pause, ui: &mut egui::Ui) {
     let seconds = pause.remaining_s;
     let count = if seconds > 60 { seconds / 60 } else { seconds };
     ui.centered_and_justified(|ui| {
@@ -107,7 +107,7 @@ fn show_pause<'m>(_app: &mut PomoApp<'m>, pause: Pause, ui: &mut egui::Ui) {
     });
 }
 
-fn show_countdown<'m>(_app: &mut PomoApp<'m>, countdown: Countdown, ui: &mut egui::Ui) {
+fn show_countdown(countdown: Countdown, ui: &mut egui::Ui) {
     let seconds = PomoApp::seconds_remaining(countdown);
     let count = if seconds > 60 { seconds / 60 } else { seconds };
     ui.centered_and_justified(|ui| {
@@ -119,7 +119,7 @@ fn show_countdown<'m>(_app: &mut PomoApp<'m>, countdown: Countdown, ui: &mut egu
     });
 }
 
-fn show_completed<'m>(_app: &mut PomoApp<'m>, intermission: Intermission, ui: &mut egui::Ui) {
+fn show_completed(intermission: Intermission, ui: &mut egui::Ui) {
     let label = if intermission.next_kind == CountdownType::Work {
         "work time"
     } else {
