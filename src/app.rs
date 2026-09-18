@@ -1,4 +1,3 @@
-use log;
 use rodio::mixer::Mixer;
 use rodio::{Decoder, Player};
 use std::time::{Duration, SystemTime};
@@ -42,7 +41,7 @@ pub enum AppState {
 }
 
 impl PomoApp {
-    pub fn new<'m>(mixer: &'m Mixer) -> Self {
+    pub fn new(mixer: &Mixer) -> Self {
         let now = std::time::SystemTime::now();
         let player = Player::connect_new(mixer);
 

@@ -1,7 +1,6 @@
 use crate::app::{AppState, Countdown, CountdownType, Intermission, Pause, PomoApp};
 use eframe::egui::ViewportCommand;
 use egui::{Button, CentralPanel, FontId, Frame, RichText, Sense};
-use log;
 use std::time::Duration;
 
 impl eframe::App for PomoApp {
