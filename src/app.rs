@@ -7,6 +7,7 @@ pub struct PomoApp<'m> {
     state: AppState,
     mixer: &'m Mixer,
     alarm_wav: &'static [u8],
+    ping_wav: &'static [u8],
     player: Player,
 }
 
@@ -42,10 +43,13 @@ pub enum AppState {
 }
 
 impl<'m> PomoApp<'m> {
-    pub fn new(mixer: &'m Mixer, alarm_wav: &'static [u8], ahead: u64) -> Self {
+    pub fn new(mixer: &'m Mixer, ahead: u64) -> Self {
         let now = std::time::SystemTime::now();
         let deadline = now + Duration::from_secs(ahead);
         let player = Player::connect_new(mixer);
+
+        let alarm_wav = include_bytes!("../audio/alarm.wav");
+        let ping_wav = include_bytes!("../audio/ping.wav");
         Self {
             state: AppState::Completed(Intermission {
                 last_reminder: now,
@@ -53,6 +57,7 @@ impl<'m> PomoApp<'m> {
             }),
             mixer,
             alarm_wav,
+            ping_wav,
             player,
         }
     }
@@ -72,6 +77,11 @@ impl<'m> PomoApp<'m> {
             last_reminder: SystemTime::now(),
             next_kind: flip_countdown_type(countdown.kind),
         });
+    }
+
+    fn play_ping(&mut self) {
+        let decoder = Decoder::new(std::io::Cursor::new(self.ping_wav)).unwrap();
+        self.player.append(decoder);
     }
 
     pub fn play_pause(&mut self) {
@@ -121,6 +131,20 @@ impl<'m> PomoApp<'m> {
             let seconds = Self::seconds_remaining(countdown);
             if seconds == 0 {
                 self.play_alarm(&countdown);
+            }
+        }
+
+        if let AppState::Completed(intermission) = self.state {
+            let now = SystemTime::now();
+            let since_last_ping = now
+                .duration_since(intermission.last_reminder)
+                .unwrap_or(Duration::from_secs(0));
+            if since_last_ping >= Duration::from_secs(10) {
+                self.play_ping();
+                self.state = AppState::Completed(Intermission {
+                    last_reminder: now,
+                    ..intermission
+                });
             }
         }
     }

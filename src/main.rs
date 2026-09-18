@@ -8,7 +8,8 @@ use eframe::egui;
 use egui::{Context, ViewportBuilder};
 
 fn main() -> eframe::Result {
-    env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
+    // Log to stderr (RUST_LOG=debug for everything, RUST_LOG=pomo for our own messages)
+    env_logger::init();
     let options = eframe::NativeOptions {
         viewport: ViewportBuilder::default()
             .with_inner_size([320.0, 240.0])
@@ -19,10 +20,8 @@ fn main() -> eframe::Result {
     let ctx = Context::default();
 
     // Get an OS-Sink handle to the default physical sound device.
-    // Note that the playback stops when the handle is dropped.//!
+    // Note that the playback stops when the handle is dropped.
     let sink = rodio::DeviceSinkBuilder::open_default_sink().expect("open default audio stream");
-    // Load a sound from a file, using a path relative to Cargo.toml
-    let alarm_wav = include_bytes!("../audio/alarm.wav");
 
     ctx.all_styles_mut(|s| {
         s.visuals.widgets.inactive.weak_bg_fill =
@@ -34,12 +33,6 @@ fn main() -> eframe::Result {
         "pomo",
         options,
         Some(ctx),
-        Box::new(|_cc| {
-            Ok(Box::<PomoApp>::new(PomoApp::new(
-                sink.mixer(),
-                alarm_wav,
-                3,
-            )))
-        }),
+        Box::new(|_cc| Ok(Box::<PomoApp>::new(PomoApp::new(sink.mixer(), 3)))),
     )
 }
