@@ -30,6 +30,11 @@ impl eframe::App for PomoApp {
         // egui won't automatically redraw unless there's some kind of event
         ui.ctx().request_repaint_after(Duration::from_secs(1));
     }
+
+    fn clear_color(&self, _visuals: &egui::Visuals) -> [f32; 4] {
+        // so that the break overlay can be transparent
+        [0.0, 0.0, 0.0, 0.0]
+    }
 }
 
 fn get_bg_color(state: &AppState) -> egui::Color32 {
@@ -107,6 +112,10 @@ fn show_pause(pause: Pause, ui: &mut egui::Ui) {
 }
 
 fn show_countdown(countdown: Countdown, ui: &mut egui::Ui) {
+    if countdown.kind == CountdownType::Break {
+        show_break_overlay(ui);
+    }
+
     let seconds = PomoApp::seconds_remaining(countdown);
     let count = if seconds > 60 { seconds / 60 } else { seconds };
     ui.centered_and_justified(|ui| {
@@ -131,4 +140,33 @@ fn show_completed(intermission: Intermission, ui: &mut egui::Ui) {
                 .strong(),
         );
     });
+}
+
+fn show_break_overlay(ui: &mut egui::Ui) {
+    ui.set_embed_viewports(false);
+    ui.ctx().show_viewport_immediate(
+        egui::ViewportId::from_hash_of("break_overlay"),
+        egui::ViewportBuilder::default()
+            .with_always_on_top()
+            // TODO: we're still getting window decorations from somewhere -
+            // not clear if it's windows not respecting this option or something
+            // in the ui definition below.
+            .with_decorations(false)
+            // TODO: grab the monitor resolution so we can center/size
+            // this overlay properly
+            .with_inner_size([2000.0, 300.0])
+            .with_transparent(true)
+            .with_mouse_passthrough(true),
+        |ui, _class| {
+            // doesn't help:
+            // let frame = Frame::default().fill(egui::Color32::from_rgba_unmultiplied(0, 0, 0, 0)).shadow(Shadow::NONE).stroke(Stroke::NONE);
+            egui::CentralPanel::no_frame().show(ui, |ui| {
+                ui.label(
+                    RichText::new("Break time!")
+                        .font(FontId::proportional(300.0))
+                        .strong(),
+                );
+            });
+        },
+    );
 }
